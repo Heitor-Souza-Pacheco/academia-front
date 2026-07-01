@@ -2,7 +2,7 @@
 //  Cliente da API — fala com o backend Spring (academia).
 // ============================================================
 import { API_BASE } from "./config.js";
-import { getToken, clearSession } from "./session.js";
+import { getToken, clearSession, getCurrentUser } from "./session.js";
 
 // Erro de API com mensagem amigável e status.
 export class ApiError extends Error {
@@ -43,13 +43,21 @@ async function request(path, { method = "GET", body, auth = true } = {}) {
   }
 
   if (res.status === 401 || res.status === 403) {
-    // Token inválido/expirado ou sem permissão.
-    if (getToken()) {
+    // 401 = não autenticado. 403 pode ser "sem permissão para esta ação"
+    // OU token expirado (este backend responde 403 para ambos os casos).
+    // Só encerramos a sessão quando o token realmente não vale mais —
+    // caso contrário, um simples 403 de ação deslogava o usuário à toa.
+    const tinhaToken = !!getToken();
+    const sessaoValida = !!getCurrentUser(); // null se o token expirou/é inválido
+    if (tinhaToken && (res.status === 401 || !sessaoValida)) {
       clearSession();
       notifyUnauthorized();
+      throw new ApiError("Sua sessão expirou. Entre novamente.", res.status);
     }
     throw new ApiError(
-      res.status === 403 ? "Você não tem permissão para esta ação." : "Sessão expirada. Faça login novamente.",
+      res.status === 403
+        ? "Você não tem permissão para realizar esta ação."
+        : "Sessão expirada. Faça login novamente.",
       res.status
     );
   }
@@ -58,7 +66,15 @@ async function request(path, { method = "GET", body, auth = true } = {}) {
   const text = await res.text();
 
   if (!res.ok) {
-    throw new ApiError(text || `Erro ${res.status}`, res.status);
+    // O backend pode responder erro como JSON ({ message }) ou texto puro.
+    let message = text || `Erro ${res.status}`;
+    try {
+      const parsed = JSON.parse(text);
+      message = parsed.message || parsed.error || message;
+    } catch {
+      /* corpo em texto puro — usa como está */
+    }
+    throw new ApiError(message, res.status);
   }
 
   if (!text) return null;
