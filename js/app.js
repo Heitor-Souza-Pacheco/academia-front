@@ -391,7 +391,13 @@ function renderAdmin() {
 
 async function handleDelete(id) {
   const ficha = state.fichas.find((f) => Number(f.id) === id);
-  if (!confirm(`Excluir a ficha "${ficha?.titulo}"? Esta ação não pode ser desfeita.`)) return;
+  const ok = await confirmDialog({
+    title: "Excluir ficha",
+    message: `Tem certeza que deseja excluir a ficha <strong>"${esc(ficha?.titulo || "")}"</strong>?<br>Esta ação não pode ser desfeita.`,
+    confirmText: "Excluir",
+    danger: true,
+  });
+  if (!ok) return;
   try {
     await fichasApi.deletar(id);
     state.fichas = state.fichas.filter((f) => Number(f.id) !== id);
@@ -525,6 +531,53 @@ function initModals() {
   });
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") $$(".modal:not(.is-hidden)").forEach((m) => closeModal("#" + m.id));
+  });
+}
+
+// Modal de confirmação reutilizável — substitui o confirm() do navegador.
+// Retorna uma Promise que resolve para true (confirmou) ou false (cancelou).
+function confirmDialog({
+  title = "Confirmar",
+  message = "",
+  confirmText = "Confirmar",
+  cancelText = "Cancelar",
+  danger = true,
+} = {}) {
+  return new Promise((resolve) => {
+    const modal = $("#confirm-modal");
+    const okBtn = $("[data-confirm-ok]", modal);
+    const cancelBtn = $("[data-confirm-cancel]", modal);
+
+    $("#confirm-title").textContent = title;
+    $("#confirm-message").innerHTML = message; // conteúdo já escapado pelo chamador
+    okBtn.textContent = confirmText;
+    cancelBtn.textContent = cancelText;
+    okBtn.className = `btn ${danger ? "btn--danger" : "btn--primary"}`;
+
+    const cleanup = (result) => {
+      okBtn.removeEventListener("click", onOk);
+      cancelBtn.removeEventListener("click", onCancel);
+      modal.removeEventListener("click", onBackdrop);
+      document.removeEventListener("keydown", onKey);
+      closeModal("#confirm-modal");
+      resolve(result);
+    };
+    const onOk = () => cleanup(true);
+    const onCancel = () => cleanup(false);
+    const onBackdrop = (e) => {
+      if (e.target.closest("[data-close-modal]")) cleanup(false);
+    };
+    const onKey = (e) => {
+      if (e.key === "Escape") cleanup(false);
+    };
+
+    okBtn.addEventListener("click", onOk);
+    cancelBtn.addEventListener("click", onCancel);
+    modal.addEventListener("click", onBackdrop);
+    document.addEventListener("keydown", onKey);
+
+    openModal("#confirm-modal");
+    okBtn.focus();
   });
 }
 

@@ -283,6 +283,12 @@ body {
 .modal__close:hover { color: var(--red); }
 .modal__title { font-family: var(--font-display); font-weight: 700; font-size: 24px; margin-bottom: 20px; text-transform: uppercase; }
 
+/* ---------- Confirmação ---------- */
+.modal__dialog--confirm { max-width: 420px; }
+.confirm__message { color: var(--text); font-size: 15px; line-height: 1.5; margin-bottom: 24px; }
+.confirm__message strong { color: var(--white); }
+.confirm__actions { display: flex; justify-content: flex-end; gap: 12px; }
+
 /* ---------- Detalhe da ficha ---------- */
 .detail__cat { display: inline-block; margin-bottom: 8px; }
 .detail__title { font-family: var(--font-display); font-weight: 700; font-size: 30px; line-height: 1.1; color: var(--white); }

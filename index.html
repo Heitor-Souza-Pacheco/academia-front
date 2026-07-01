@@ -210,6 +210,19 @@
     </div>
   </div>
 
+  <!-- ===================== MODAL: CONFIRMAÇÃO ===================== -->
+  <div class="modal is-hidden" id="confirm-modal" role="alertdialog" aria-modal="true" aria-labelledby="confirm-title" aria-describedby="confirm-message">
+    <div class="modal__backdrop" data-close-modal></div>
+    <div class="modal__dialog modal__dialog--confirm">
+      <h2 class="modal__title" id="confirm-title">Confirmar</h2>
+      <p class="confirm__message" id="confirm-message"></p>
+      <div class="confirm__actions">
+        <button type="button" class="btn btn--ghost" data-confirm-cancel>Cancelar</button>
+        <button type="button" class="btn btn--danger" data-confirm-ok>Confirmar</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ===================== TOASTS ===================== -->
   <div class="toasts" id="toasts" aria-live="polite"></div>
 
