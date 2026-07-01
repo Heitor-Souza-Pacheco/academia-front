@@ -1,7 +1,7 @@
 // ============================================================
 //  CRANIUM — App principal (vanilla JS, ES modules)
 // ============================================================
-import { authApi, fichasApi, ApiError } from "./api.js";
+import { authApi, fichasApi, videosApi, ApiError } from "./api.js";
 import { setToken, clearSession, getCurrentUser } from "./session.js";
 import { getFavIds, isFav, toggleFav } from "./favorites.js";
 
@@ -9,6 +9,7 @@ import { getFavIds, isFav, toggleFav } from "./favorites.js";
 const state = {
   user: null,
   fichas: [],          // todas as fichas vindas da API
+  videos: [],          // biblioteca de vídeos (para vincular aos exercícios)
   categoria: "Todas",  // filtro de categoria ativo
   busca: "",           // texto de busca
   view: "fichas",
@@ -131,17 +132,19 @@ function enterApp() {
   $("#user-role").textContent = state.user.isAdmin ? "Administrador" : "Aluno";
   $("#user-avatar").textContent = state.user.nome.charAt(0).toUpperCase();
 
-  // Mostra a aba de administração só para ADMIN
-  $(".nav__link.is-admin").classList.toggle("is-hidden", !state.user.isAdmin);
+  // Mostra as abas de administração só para ADMIN
+  $$(".nav__link.is-admin").forEach((l) => l.classList.toggle("is-hidden", !state.user.isAdmin));
 
   switchView("fichas");
   loadFichas();
+  if (state.user.isAdmin) loadVideos(); // biblioteca usada no form de fichas
 }
 
 function logout() {
   clearSession();
   state.user = null;
   state.fichas = [];
+  state.videos = [];
   showAuth();
   toast("Você saiu da sua conta.");
 }
@@ -178,6 +181,7 @@ function switchView(view) {
 
   if (view === "salvos") renderSalvos();
   if (view === "gerenciar") renderAdmin();
+  if (view === "videos") renderVideosAdmin();
 }
 
 // ============================================================
@@ -339,6 +343,7 @@ async function openFichaDetail(id) {
           <span class="exrow__sets">
             <span class="exrow__tag"><strong>${ex.series}</strong> séries</span>
             <span class="exrow__tag"><strong>${ex.repeticoes}</strong> reps</span>
+            ${ex.video ? `<button type="button" class="exrow__video" data-ex-idx="${i}">▶ Vídeo</button>` : ""}
           </span>
         </div>`
               )
@@ -357,7 +362,51 @@ async function openFichaDetail(id) {
     openFichaDetail(ficha.id); // atualiza o botão do modal
   });
 
+  // Botões "▶ Vídeo" de cada exercício
+  $$(".exrow__video", $("#ficha-modal-body")).forEach((btn) =>
+    btn.addEventListener("click", () => {
+      const video = exercicios[Number(btn.dataset.exIdx)]?.video;
+      if (video) openVideoPlayer(video);
+    })
+  );
+
   openModal("#ficha-modal");
+}
+
+// ============================================================
+//  PLAYER DE VÍDEO
+// ============================================================
+function openVideoPlayer(video) {
+  $("#video-player-title").textContent = video.nome || "Vídeo";
+  $("#video-player-body").innerHTML = videoEmbedHTML(video.videoUrl);
+  openModal("#video-player-modal");
+}
+
+// Converte a URL do vídeo no HTML de player adequado (YouTube, Vimeo,
+// arquivo direto) ou, por fim, um link para abrir em nova aba.
+function videoEmbedHTML(url) {
+  const safe = String(url || "").trim();
+  if (!safe) return `<p class="video-fallback">Este vídeo não tem uma URL cadastrada.</p>`;
+
+  const yt = safe.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([\w-]{11})/);
+  if (yt) {
+    return `<div class="video-embed"><iframe src="https://www.youtube.com/embed/${yt[1]}" title="Vídeo do exercício" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>`;
+  }
+
+  const vm = safe.match(/vimeo\.com\/(?:video\/)?(\d+)/);
+  if (vm) {
+    return `<div class="video-embed"><iframe src="https://player.vimeo.com/video/${vm[1]}" title="Vídeo do exercício" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe></div>`;
+  }
+
+  if (/\.(mp4|webm|ogg)(\?.*)?$/i.test(safe)) {
+    return `<div class="video-embed"><video src="${esc(safe)}" controls></video></div>`;
+  }
+
+  if (/^https?:\/\//i.test(safe)) {
+    return `<p class="video-fallback">Não foi possível incorporar este vídeo. <a href="${esc(safe)}" target="_blank" rel="noopener">Abrir em nova aba ↗</a></p>`;
+  }
+
+  return `<p class="video-fallback">URL de vídeo inválida.</p>`;
 }
 
 // ============================================================
@@ -446,16 +495,26 @@ function addExerciseRow(ex = {}) {
   if (!list.querySelector(".ex-edit__labels")) {
     const labels = document.createElement("div");
     labels.className = "ex-edit__labels";
-    labels.innerHTML = `<span></span><span>Exercício</span><span>Séries</span><span>Reps</span><span></span>`;
+    labels.innerHTML = `<span></span><span>Exercício</span><span>Séries</span><span>Reps</span><span>Vídeo</span><span></span>`;
     list.appendChild(labels);
   }
   const row = document.createElement("div");
   row.className = "ex-edit";
+  const selectedVideoId = ex.video?.id ?? ex.videoId ?? "";
+  const options = ['<option value="">— Nenhum —</option>']
+    .concat(
+      state.videos.map(
+        (v) =>
+          `<option value="${v.id}" ${String(v.id) === String(selectedVideoId) ? "selected" : ""}>${esc(v.nome)}</option>`
+      )
+    )
+    .join("");
   row.innerHTML = `
     <span class="ex-edit__handle">≡</span>
     <input type="text" data-f="nome" placeholder="Nome do exercício" value="${esc(ex.nome || "")}" required />
     <input type="number" data-f="series" min="1" placeholder="3" value="${ex.series ?? ""}" />
     <input type="number" data-f="repeticoes" min="1" placeholder="12" value="${ex.repeticoes ?? ""}" />
+    <select data-f="videoId" title="Vídeo de demonstração">${options}</select>
     <button type="button" class="ex-edit__remove" title="Remover">&times;</button>`;
   row.querySelector(".ex-edit__remove").addEventListener("click", () => row.remove());
   list.appendChild(row);
@@ -463,12 +522,16 @@ function addExerciseRow(ex = {}) {
 
 function collectExercises() {
   return $$(".ex-edit", $("#exercises-list"))
-    .map((row, i) => ({
-      nome: $("[data-f=nome]", row).value.trim(),
-      series: parseInt($("[data-f=series]", row).value, 10) || 0,
-      repeticoes: parseInt($("[data-f=repeticoes]", row).value, 10) || 0,
-      ordem: i + 1,
-    }))
+    .map((row, i) => {
+      const videoId = $("[data-f=videoId]", row).value;
+      return {
+        nome: $("[data-f=nome]", row).value.trim(),
+        series: parseInt($("[data-f=series]", row).value, 10) || 0,
+        repeticoes: parseInt($("[data-f=repeticoes]", row).value, 10) || 0,
+        ordem: i + 1,
+        videoId: videoId ? Number(videoId) : null,
+      };
+    })
     .filter((ex) => ex.nome);
 }
 
@@ -512,6 +575,125 @@ function refreshCategoriaDatalist() {
 }
 
 // ============================================================
+//  ADMIN — Biblioteca de vídeos
+// ============================================================
+async function loadVideos() {
+  try {
+    state.videos = (await videosApi.listarTodos()) || [];
+  } catch (err) {
+    state.videos = [];
+    if (err.status !== 401 && err.status !== 403) toast(err.message, "err");
+  }
+  if (state.view === "videos") renderVideosAdmin();
+}
+
+function renderVideosAdmin() {
+  const wrap = $("#videos-list");
+  $("#videos-empty").classList.toggle("is-hidden", state.videos.length > 0);
+  wrap.innerHTML = state.videos
+    .map(
+      (v) => `
+    <div class="admin-row" data-id="${v.id}">
+      <div class="admin-row__info">
+        <div class="admin-row__title">${esc(v.nome)}</div>
+        <div class="admin-row__sub">${esc(v.categoria || "Sem categoria")}</div>
+      </div>
+      <div class="admin-row__actions">
+        <button class="btn btn--ghost btn--sm" data-play>Assistir</button>
+        <button class="btn btn--ghost btn--sm" data-edit>Editar</button>
+        <button class="btn btn--danger btn--sm" data-del>Excluir</button>
+      </div>
+    </div>`
+    )
+    .join("");
+
+  $$(".admin-row", wrap).forEach((row) => {
+    const id = Number(row.dataset.id);
+    const video = state.videos.find((v) => Number(v.id) === id);
+    $("[data-play]", row).addEventListener("click", () => openVideoPlayer(video));
+    $("[data-edit]", row).addEventListener("click", () => openVideoForm(id));
+    $("[data-del]", row).addEventListener("click", () => handleDeleteVideo(id));
+  });
+}
+
+function openVideoForm(id = null) {
+  const form = $("#video-form");
+  form.reset();
+  clearErrors();
+  refreshVideoCategoriaDatalist();
+
+  const editing = id !== null;
+  $("#video-form-title").textContent = editing ? "Editar vídeo" : "Novo vídeo";
+  form.id.value = editing ? id : "";
+
+  if (editing) {
+    const v = state.videos.find((x) => Number(x.id) === id);
+    if (v) {
+      form.nome.value = v.nome || "";
+      form.categoria.value = v.categoria || "";
+      form.videoUrl.value = v.videoUrl || "";
+    }
+  }
+
+  openModal("#video-form-modal");
+}
+
+function initVideoForm() {
+  $("#new-video-btn").addEventListener("click", () => openVideoForm(null));
+
+  $("#video-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const f = e.target;
+    const payload = {
+      nome: f.nome.value.trim(),
+      categoria: f.categoria.value.trim(),
+      videoUrl: f.videoUrl.value.trim(),
+    };
+    if (!payload.nome || !payload.categoria || !payload.videoUrl) {
+      return showFormError(f, "Preencha nome, categoria e URL do vídeo.");
+    }
+    const id = f.id.value;
+    const btn = f.querySelector("button[type=submit]");
+    await withButton(btn, "Salvando...", async () => {
+      try {
+        if (id) await videosApi.atualizar(Number(id), payload);
+        else await videosApi.criar(payload);
+        closeModal("#video-form-modal");
+        toast(id ? "Vídeo atualizado!" : "Vídeo criado!");
+        await loadVideos();
+      } catch (err) {
+        showFormError(f, err.message);
+      }
+    });
+  });
+}
+
+async function handleDeleteVideo(id) {
+  const video = state.videos.find((v) => Number(v.id) === id);
+  const ok = await confirmDialog({
+    title: "Excluir vídeo",
+    message: `Tem certeza que deseja excluir o vídeo <strong>"${esc(video?.nome || "")}"</strong>?<br>Esta ação não pode ser desfeita.`,
+    confirmText: "Excluir",
+    danger: true,
+  });
+  if (!ok) return;
+  try {
+    await videosApi.deletar(id);
+    state.videos = state.videos.filter((v) => Number(v.id) !== id);
+    toast("Vídeo excluído.");
+    renderVideosAdmin();
+  } catch (err) {
+    toast(err.message, "err");
+  }
+}
+
+function refreshVideoCategoriaDatalist() {
+  const dl = $("#video-categoria-list");
+  const cats = [...new Set(state.videos.map((v) => v.categoria).filter(Boolean))];
+  dl.innerHTML = cats.map((c) => `<option value="${esc(c)}"></option>`).join("");
+}
+
+// ============================================================
 //  MODAIS (genérico)
 // ============================================================
 function openModal(sel) {
@@ -521,6 +703,8 @@ function openModal(sel) {
 function closeModal(sel) {
   $(sel).classList.add("is-hidden");
   document.body.style.overflow = "";
+  // Limpa o player para o vídeo parar de tocar ao fechar.
+  if (sel === "#video-player-modal") $("#video-player-body").innerHTML = "";
 }
 function initModals() {
   document.addEventListener("click", (e) => {
@@ -615,6 +799,7 @@ function init() {
   initSearch();
   initModals();
   initFichaForm();
+  initVideoForm();
 
   // Logout automático quando o token é rejeitado pela API
   window.addEventListener("cranium:unauthorized", () => {

@@ -89,3 +89,14 @@ export const fichasApi = {
   atualizar: (id, ficha) => request(`/api/fichas/${id}`, { method: "PUT", body: ficha }),
   deletar: (id) => request(`/api/fichas/${id}`, { method: "DELETE" }),
 };
+
+// ---------------- Vídeos ----------------
+export const videosApi = {
+  listarTodos: () => request("/api/videos"),
+  buscarPorId: (id) => request(`/api/videos/${id}`),
+  buscarPorNome: (nome) => request(`/api/videos/busca?nome=${encodeURIComponent(nome)}`),
+  listarPorCategoria: (categoria) => request(`/api/videos/categoria/${encodeURIComponent(categoria)}`),
+  criar: (video) => request("/api/videos", { method: "POST", body: video }),
+  atualizar: (id, video) => request(`/api/videos/${id}`, { method: "PUT", body: video }),
+  deletar: (id) => request(`/api/videos/${id}`, { method: "DELETE" }),
+};

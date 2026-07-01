@@ -90,6 +90,7 @@
           <button class="nav__link is-active" data-view="fichas">Fichas</button>
           <button class="nav__link" data-view="salvos">Salvos <span class="nav__badge" id="salvos-count">0</span></button>
           <button class="nav__link is-admin is-hidden" data-view="gerenciar">Gerenciar</button>
+          <button class="nav__link is-admin is-hidden" data-view="videos">Vídeos</button>
         </nav>
 
         <div class="topbar__user">
@@ -157,6 +158,21 @@
           <p>Nenhuma ficha cadastrada ainda. Crie a primeira!</p>
         </div>
       </section>
+
+      <!-- VIEW: VÍDEOS (ADMIN) -->
+      <section class="view" data-view="videos">
+        <div class="view__head">
+          <div>
+            <h1 class="view__title">Biblioteca de vídeos</h1>
+            <p class="view__subtitle">Vídeos de demonstração para vincular aos exercícios.</p>
+          </div>
+          <button class="btn btn--primary" id="new-video-btn">+ Novo vídeo</button>
+        </div>
+        <div class="admin-list" id="videos-list"></div>
+        <div class="empty is-hidden" id="videos-empty">
+          <p>Nenhum vídeo cadastrado ainda. Adicione o primeiro!</p>
+        </div>
+      </section>
     </main>
   </div>
 
@@ -207,6 +223,46 @@
         </div>
         <p class="form-error" data-error></p>
       </form>
+    </div>
+  </div>
+
+  <!-- ===================== MODAL: FORMULÁRIO DE VÍDEO (ADMIN) ===================== -->
+  <div class="modal is-hidden" id="video-form-modal" role="dialog" aria-modal="true">
+    <div class="modal__backdrop" data-close-modal></div>
+    <div class="modal__dialog">
+      <button class="modal__close" data-close-modal aria-label="Fechar">&times;</button>
+      <h2 class="modal__title" id="video-form-title">Novo vídeo</h2>
+      <form id="video-form" class="ficha-form">
+        <input type="hidden" name="id" />
+        <label class="field">
+          <span class="field__label">Nome</span>
+          <input type="text" name="nome" placeholder="Ex: Agachamento livre" required />
+        </label>
+        <label class="field">
+          <span class="field__label">Categoria</span>
+          <input type="text" name="categoria" list="video-categoria-list" placeholder="Ex: Pernas" required />
+          <datalist id="video-categoria-list"></datalist>
+        </label>
+        <label class="field">
+          <span class="field__label">URL do vídeo</span>
+          <input type="url" name="videoUrl" placeholder="https://www.youtube.com/watch?v=..." required />
+        </label>
+        <div class="ficha-form__actions">
+          <button type="button" class="btn btn--ghost" data-close-modal>Cancelar</button>
+          <button type="submit" class="btn btn--primary">Salvar vídeo</button>
+        </div>
+        <p class="form-error" data-error></p>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===================== MODAL: PLAYER DE VÍDEO ===================== -->
+  <div class="modal is-hidden" id="video-player-modal" role="dialog" aria-modal="true">
+    <div class="modal__backdrop" data-close-modal></div>
+    <div class="modal__dialog modal__dialog--wide">
+      <button class="modal__close" data-close-modal aria-label="Fechar">&times;</button>
+      <h2 class="modal__title" id="video-player-title">Vídeo</h2>
+      <div id="video-player-body"></div>
     </div>
   </div>
 

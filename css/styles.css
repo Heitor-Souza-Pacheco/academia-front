@@ -289,6 +289,20 @@ body {
 .confirm__message strong { color: var(--white); }
 .confirm__actions { display: flex; justify-content: flex-end; gap: 12px; }
 
+/* ---------- Vídeo do exercício (detalhe) ---------- */
+.exrow__video {
+  border: 1px solid var(--line); background: var(--black); color: var(--muted);
+  border-radius: 999px; padding: 5px 12px; font-size: 13px; cursor: pointer; transition: 0.16s;
+  display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;
+}
+.exrow__video:hover { border-color: var(--red); color: var(--red); }
+
+/* ---------- Player de vídeo ---------- */
+.video-embed { position: relative; width: 100%; padding-bottom: 56.25%; border-radius: var(--radius-sm); overflow: hidden; background: #000; }
+.video-embed iframe, .video-embed video { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.video-fallback { color: var(--muted); font-size: 15px; }
+.video-fallback a { color: var(--red); font-weight: 600; }
+
 /* ---------- Detalhe da ficha ---------- */
 .detail__cat { display: inline-block; margin-bottom: 8px; }
 .detail__title { font-family: var(--font-display); font-weight: 700; font-size: 30px; line-height: 1.1; color: var(--white); }
@@ -320,13 +334,13 @@ body {
 .exercises__head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
 .exercises__head h3 { font-family: var(--font-display); font-size: 18px; letter-spacing: 1px; text-transform: uppercase; }
 .exercises__list { display: flex; flex-direction: column; gap: 10px; }
-.ex-edit { display: grid; grid-template-columns: 28px 1fr 76px 76px 40px; gap: 10px; align-items: center; }
+.ex-edit { display: grid; grid-template-columns: 28px 1fr 68px 68px 150px 40px; gap: 10px; align-items: center; }
 .ex-edit__handle { color: var(--muted-2); font-weight: 700; text-align: center; cursor: grab; }
-.ex-edit input { width: 100%; padding: 10px 12px; background: var(--black); border: 1px solid var(--line); border-radius: 8px; color: var(--text); font-size: 14px; }
-.ex-edit input:focus { outline: none; border-color: var(--red); }
+.ex-edit input, .ex-edit select { width: 100%; padding: 10px 12px; background: var(--black); border: 1px solid var(--line); border-radius: 8px; color: var(--text); font-size: 14px; }
+.ex-edit input:focus, .ex-edit select:focus { outline: none; border-color: var(--red); }
 .ex-edit__remove { border: 1px solid var(--line); background: transparent; color: #ff6b74; border-radius: 8px; height: 40px; cursor: pointer; font-size: 18px; }
 .ex-edit__remove:hover { background: rgba(255,107,116,0.12); }
-.ex-edit__labels { display: grid; grid-template-columns: 28px 1fr 76px 76px 40px; gap: 10px; font-size: 12px; color: var(--muted); font-weight: 600; }
+.ex-edit__labels { display: grid; grid-template-columns: 28px 1fr 68px 68px 150px 40px; gap: 10px; font-size: 12px; color: var(--muted); font-weight: 600; }
 .ficha-form__actions { display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid var(--line); padding-top: 18px; }
 
 /* ============================================================
@@ -365,6 +379,6 @@ body {
   .view__head { flex-direction: column; align-items: flex-start; }
   .ficha-form__row { flex-direction: column; }
   .field--sm { max-width: none; }
-  .ex-edit, .ex-edit__labels { grid-template-columns: 1fr 60px 60px 36px; }
+  .ex-edit, .ex-edit__labels { grid-template-columns: 1fr 54px 54px 110px 36px; }
   .ex-edit__handle, .ex-edit__labels span:first-child { display: none; }
 }
