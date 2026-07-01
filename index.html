@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cranium — Academia</title>
+  <meta name="description" content="Cranium — sua academia. Fichas de treino, exercícios e progresso." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./css/styles.css" />
+</head>
+<body>
+  <!-- ===================== TELA DE AUTENTICAÇÃO ===================== -->
+  <main id="auth-screen" class="auth-screen">
+    <div class="auth-hero" aria-hidden="true">
+      <div class="auth-hero__overlay"></div>
+      <div class="auth-hero__content">
+        <div class="brand brand--lg">
+          <span class="brand__mark">C</span>
+          <span class="brand__name">CRANIUM</span>
+        </div>
+        <h2 class="auth-hero__tagline">Mente forte.<br />Corpo mais forte ainda.</h2>
+        <p class="auth-hero__sub">Acesse suas fichas de treino, acompanhe seus exercícios e evolua todos os dias.</p>
+      </div>
+    </div>
+
+    <div class="auth-panel">
+      <div class="auth-card">
+        <div class="brand brand--mobile">
+          <span class="brand__mark">C</span>
+          <span class="brand__name">CRANIUM</span>
+        </div>
+
+        <div class="auth-tabs" role="tablist">
+          <button class="auth-tab is-active" data-auth-tab="login" role="tab">Entrar</button>
+          <button class="auth-tab" data-auth-tab="register" role="tab">Criar conta</button>
+        </div>
+
+        <!-- LOGIN -->
+        <form id="login-form" class="auth-form" novalidate>
+          <label class="field">
+            <span class="field__label">E-mail</span>
+            <input type="email" name="email" autocomplete="email" placeholder="voce@email.com" required />
+          </label>
+          <label class="field">
+            <span class="field__label">Senha</span>
+            <input type="password" name="senha" autocomplete="current-password" placeholder="••••••••" required />
+          </label>
+          <label class="checkbox">
+            <input type="checkbox" name="lembrar" checked />
+            <span>Manter conectado neste navegador</span>
+          </label>
+          <button type="submit" class="btn btn--primary btn--block">Entrar</button>
+          <p class="form-error" data-error></p>
+        </form>
+
+        <!-- CADASTRO -->
+        <form id="register-form" class="auth-form is-hidden" novalidate>
+          <label class="field">
+            <span class="field__label">Nome completo</span>
+            <input type="text" name="nome" autocomplete="name" placeholder="Seu nome" required />
+          </label>
+          <label class="field">
+            <span class="field__label">E-mail</span>
+            <input type="email" name="email" autocomplete="email" placeholder="voce@email.com" required />
+          </label>
+          <label class="field">
+            <span class="field__label">Senha</span>
+            <input type="password" name="senha" autocomplete="new-password" placeholder="Crie uma senha" required minlength="4" />
+          </label>
+          <button type="submit" class="btn btn--primary btn--block">Criar minha conta</button>
+          <p class="form-error" data-error></p>
+        </form>
+      </div>
+      <p class="auth-footnote">© <span id="year"></span> Cranium Academia</p>
+    </div>
+  </main>
+
+  <!-- ===================== APLICAÇÃO ===================== -->
+  <div id="app-screen" class="app is-hidden">
+    <header class="topbar">
+      <div class="topbar__inner">
+        <div class="brand">
+          <span class="brand__mark">C</span>
+          <span class="brand__name">CRANIUM</span>
+        </div>
+
+        <nav class="nav" id="main-nav">
+          <button class="nav__link is-active" data-view="fichas">Fichas</button>
+          <button class="nav__link" data-view="salvos">Salvos <span class="nav__badge" id="salvos-count">0</span></button>
+          <button class="nav__link is-admin is-hidden" data-view="gerenciar">Gerenciar</button>
+        </nav>
+
+        <div class="topbar__user">
+          <div class="user-chip">
+            <span class="user-chip__avatar" id="user-avatar">U</span>
+            <span class="user-chip__meta">
+              <span class="user-chip__name" id="user-name">Usuário</span>
+              <span class="user-chip__role" id="user-role">Aluno</span>
+            </span>
+          </div>
+          <button class="btn btn--ghost btn--sm" id="logout-btn" title="Sair">Sair</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="content" id="content">
+      <!-- VIEW: FICHAS -->
+      <section class="view is-active" data-view="fichas">
+        <div class="view__head">
+          <div>
+            <h1 class="view__title">Fichas de treino</h1>
+            <p class="view__subtitle">Escolha um treino e bora pra cima.</p>
+          </div>
+        </div>
+        <div class="toolbar">
+          <div class="search">
+            <svg viewBox="0 0 24 24" class="search__icon" aria-hidden="true"><path d="M21 21l-4.3-4.3M11 19a8 8 0 1 1 0-16 8 8 0 0 1 0 16Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            <input type="search" id="search-input" placeholder="Buscar por título..." />
+          </div>
+          <div class="filters" id="category-filters"></div>
+        </div>
+        <div class="grid" id="fichas-grid"></div>
+        <div class="empty is-hidden" id="fichas-empty">
+          <p>Nenhuma ficha encontrada.</p>
+        </div>
+      </section>
+
+      <!-- VIEW: SALVOS -->
+      <section class="view" data-view="salvos">
+        <div class="view__head">
+          <div>
+            <h1 class="view__title">Salvos no seu perfil</h1>
+            <p class="view__subtitle">As fichas que você guardou para treinar.</p>
+          </div>
+        </div>
+        <div class="grid" id="salvos-grid"></div>
+        <div class="empty is-hidden" id="salvos-empty">
+          <div class="empty__art">🔖</div>
+          <p>Você ainda não salvou nenhuma ficha.</p>
+          <button class="btn btn--ghost btn--sm" data-goto="fichas">Ver fichas disponíveis</button>
+        </div>
+      </section>
+
+      <!-- VIEW: GERENCIAR (ADMIN) -->
+      <section class="view" data-view="gerenciar">
+        <div class="view__head">
+          <div>
+            <h1 class="view__title">Gerenciar fichas</h1>
+            <p class="view__subtitle">Crie, edite e remova as fichas da academia.</p>
+          </div>
+          <button class="btn btn--primary" id="new-ficha-btn">+ Nova ficha</button>
+        </div>
+        <div class="admin-list" id="admin-list"></div>
+        <div class="empty is-hidden" id="admin-empty">
+          <p>Nenhuma ficha cadastrada ainda. Crie a primeira!</p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- ===================== MODAL: DETALHE DA FICHA ===================== -->
+  <div class="modal is-hidden" id="ficha-modal" role="dialog" aria-modal="true">
+    <div class="modal__backdrop" data-close-modal></div>
+    <div class="modal__dialog">
+      <button class="modal__close" data-close-modal aria-label="Fechar">&times;</button>
+      <div id="ficha-modal-body"></div>
+    </div>
+  </div>
+
+  <!-- ===================== MODAL: FORMULÁRIO DE FICHA (ADMIN) ===================== -->
+  <div class="modal is-hidden" id="form-modal" role="dialog" aria-modal="true">
+    <div class="modal__backdrop" data-close-modal></div>
+    <div class="modal__dialog modal__dialog--wide">
+      <button class="modal__close" data-close-modal aria-label="Fechar">&times;</button>
+      <h2 class="modal__title" id="form-modal-title">Nova ficha</h2>
+      <form id="ficha-form" class="ficha-form">
+        <input type="hidden" name="id" />
+        <div class="ficha-form__row">
+          <label class="field">
+            <span class="field__label">Título</span>
+            <input type="text" name="titulo" placeholder="Ex: Treino A — Peito e Tríceps" required />
+          </label>
+          <label class="field field--sm">
+            <span class="field__label">Categoria</span>
+            <input type="text" name="categoria" list="categoria-list" placeholder="Ex: Hipertrofia" required />
+            <datalist id="categoria-list"></datalist>
+          </label>
+        </div>
+        <label class="field">
+          <span class="field__label">Descrição</span>
+          <textarea name="descricao" rows="2" placeholder="Objetivo do treino, observações..."></textarea>
+        </label>
+
+        <div class="exercises">
+          <div class="exercises__head">
+            <h3>Exercícios</h3>
+            <button type="button" class="btn btn--ghost btn--sm" id="add-exercise-btn">+ Adicionar exercício</button>
+          </div>
+          <div class="exercises__list" id="exercises-list"></div>
+        </div>
+
+        <div class="ficha-form__actions">
+          <button type="button" class="btn btn--ghost" data-close-modal>Cancelar</button>
+          <button type="submit" class="btn btn--primary">Salvar ficha</button>
+        </div>
+        <p class="form-error" data-error></p>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===================== TOASTS ===================== -->
+  <div class="toasts" id="toasts" aria-live="polite"></div>
+
+  <script type="module" src="./js/app.js"></script>
+</body>
+</html>

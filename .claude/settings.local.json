@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/01065831/Documents/academia/src/main/resources/**)",
+      "Read(//c/Users/01065831/Documents/academia/src/main/java/**)",
+      "Bash(npm -v)",
+      "Bash(echo \"exit:$?\")",
+      "PowerShell($n = \\(Get-Command node -ErrorAction SilentlyContinue\\); if \\($n\\) { node -v } else { \"no-node\" }; $p = \\(Get-Command npm -ErrorAction SilentlyContinue\\); if \\($p\\) { npm -v } else { \"no-npm\" })",
+      "PowerShell($tools = @{}; foreach\\($c in 'python','py','npx','php'\\){ $g=Get-Command $c -ErrorAction SilentlyContinue; if\\($g\\){ $tools[$c]=$g.Source } else { $tools[$c]='\\(ausente\\)' } }; $tools.GetEnumerator\\(\\) | ForEach-Object { \"$\\($_.Key\\): $\\($_.Value\\)\" })"
+    ]
+  }
+}
