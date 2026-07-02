@@ -303,6 +303,75 @@ body {
 .video-fallback { color: var(--muted); font-size: 15px; }
 .video-fallback a { color: var(--red); font-weight: 600; }
 
+/* ============================================================
+   ASSISTENTE VIRTUAL
+   ============================================================ */
+.assistant-fab {
+  position: fixed; bottom: 24px; right: 24px; z-index: 70;
+  width: 60px; height: 60px; border-radius: 50%; border: 0; cursor: pointer;
+  background: linear-gradient(135deg, var(--red), var(--red-dark));
+  box-shadow: 0 10px 26px var(--red-glow); color: #fff;
+  display: grid; place-items: center; transition: transform 0.16s ease, box-shadow 0.16s ease;
+}
+.assistant-fab:hover { transform: translateY(-2px) scale(1.04); box-shadow: 0 14px 32px var(--red-glow); }
+.assistant-fab__icon { font-size: 26px; line-height: 1; }
+.assistant-fab.is-hidden { display: none !important; }
+
+.assistant {
+  position: fixed; bottom: 24px; right: 24px; z-index: 71;
+  width: min(380px, calc(100vw - 32px));
+  height: min(560px, calc(100vh - 48px));
+  display: flex; flex-direction: column; overflow: hidden;
+  background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
+  box-shadow: var(--shadow); animation: pop 0.2s ease;
+}
+.assistant__head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 16px; border-bottom: 1px solid var(--line);
+  background: linear-gradient(180deg, var(--panel-2), var(--panel));
+}
+.assistant__brand { display: flex; align-items: center; gap: 10px; }
+.assistant__avatar {
+  display: grid; place-items: center; width: 38px; height: 38px; border-radius: 10px;
+  font-family: var(--font-display); font-weight: 700; font-size: 20px; color: #fff;
+  background: linear-gradient(135deg, var(--red), var(--red-dark)); box-shadow: 0 6px 16px var(--red-glow);
+}
+.assistant__title { font-family: var(--font-display); font-weight: 600; letter-spacing: 1px; text-transform: uppercase; font-size: 15px; }
+.assistant__status { font-size: 12px; color: var(--muted); }
+.assistant__close {
+  border: 0; background: transparent; color: var(--muted); font-size: 26px; line-height: 1; cursor: pointer; transition: 0.16s;
+}
+.assistant__close:hover { color: var(--red); }
+
+.assistant__messages { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+
+.amsg { max-width: 84%; padding: 10px 14px; border-radius: 14px; font-size: 14px; line-height: 1.5; word-wrap: break-word; white-space: normal; }
+.amsg--user { align-self: flex-end; background: var(--red); color: #fff; border-bottom-right-radius: 4px; }
+.amsg--bot { align-self: flex-start; background: var(--panel-2); border: 1px solid var(--line); color: var(--text); border-bottom-left-radius: 4px; }
+.amsg strong { color: inherit; font-weight: 700; }
+
+.amsg--typing { display: flex; gap: 5px; align-items: center; }
+.amsg--typing span {
+  width: 7px; height: 7px; border-radius: 50%; background: var(--muted); display: inline-block;
+  animation: aTyping 1s infinite ease-in-out;
+}
+.amsg--typing span:nth-child(2) { animation-delay: 0.15s; }
+.amsg--typing span:nth-child(3) { animation-delay: 0.3s; }
+@keyframes aTyping { 0%, 60%, 100% { opacity: 0.3; transform: translateY(0); } 30% { opacity: 1; transform: translateY(-3px); } }
+
+.assistant__form { display: flex; gap: 8px; padding: 12px; border-top: 1px solid var(--line); background: var(--panel); }
+.assistant__form input {
+  flex: 1; padding: 11px 14px; background: var(--black); border: 1px solid var(--line);
+  border-radius: 999px; color: var(--text); font-size: 14px;
+}
+.assistant__form input:focus { outline: none; border-color: var(--red); box-shadow: 0 0 0 3px var(--red-glow); }
+.assistant__send {
+  flex: 0 0 auto; width: 44px; border: 0; border-radius: 50%; cursor: pointer;
+  background: var(--red); color: #fff; font-size: 16px; transition: background 0.16s ease;
+}
+.assistant__send:hover:not(:disabled) { background: var(--red-dark); }
+.assistant__send:disabled { opacity: 0.5; cursor: not-allowed; }
+
 /* ---------- Detalhe da ficha ---------- */
 .detail__cat { display: inline-block; margin-bottom: 8px; }
 .detail__title { font-family: var(--font-display); font-weight: 700; font-size: 30px; line-height: 1.1; color: var(--white); }

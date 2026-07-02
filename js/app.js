@@ -1,7 +1,7 @@
 // ============================================================
 //  CRANIUM — App principal (vanilla JS, ES modules)
 // ============================================================
-import { authApi, fichasApi, videosApi, ApiError } from "./api.js";
+import { authApi, fichasApi, videosApi, assistenteApi, ApiError } from "./api.js";
 import { setToken, clearSession, getCurrentUser } from "./session.js";
 import { getFavIds, isFav, toggleFav } from "./favorites.js";
 
@@ -145,6 +145,7 @@ function logout() {
   state.user = null;
   state.fichas = [];
   state.videos = [];
+  resetAssistant();
   showAuth();
   toast("Você saiu da sua conta.");
 }
@@ -791,6 +792,112 @@ function formatDate(iso) {
 }
 
 // ============================================================
+//  ASSISTENTE VIRTUAL
+// ============================================================
+const assistant = {
+  open: false,
+  loading: false,
+  greeted: false,
+  history: [], // [{ role: "user"|"assistant", conteudo }] — só trocas reais
+};
+
+function initAssistant() {
+  $("#assistant-fab").addEventListener("click", toggleAssistant);
+  $("#assistant-close").addEventListener("click", () => setAssistantOpen(false));
+  $("#assistant-form").addEventListener("submit", handleAssistantSend);
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && assistant.open) setAssistantOpen(false);
+  });
+}
+
+function toggleAssistant() {
+  setAssistantOpen(!assistant.open);
+}
+
+function setAssistantOpen(open) {
+  assistant.open = open;
+  $("#assistant-panel").classList.toggle("is-hidden", !open);
+  $("#assistant-fab").classList.toggle("is-hidden", open);
+  if (open) {
+    if (!assistant.greeted) {
+      assistant.greeted = true;
+      const nome = state.user?.nome ? state.user.nome.split(" ")[0] : "";
+      appendAssistantMsg(
+        "assistant",
+        `E aí${nome ? ", " + nome : ""}! 💪 Sou o assistente da Cranium. Posso ajudar com dúvidas sobre treino, dieta e como usar o app. O que você quer saber?`
+      );
+    }
+    setTimeout(() => $("#assistant-input").focus(), 50);
+  }
+}
+
+function resetAssistant() {
+  assistant.history = [];
+  assistant.greeted = false;
+  assistant.loading = false;
+  setAssistantOpen(false);
+  $("#assistant-messages").innerHTML = "";
+}
+
+async function handleAssistantSend(e) {
+  e.preventDefault();
+  const input = $("#assistant-input");
+  const texto = input.value.trim();
+  if (!texto || assistant.loading) return;
+
+  input.value = "";
+  appendAssistantMsg("user", texto);
+  assistant.history.push({ role: "user", conteudo: texto });
+  setAssistantLoading(true);
+
+  try {
+    const res = await assistenteApi.perguntar(assistant.history);
+    const resposta = res?.resposta || "Desculpe, não consegui responder agora.";
+    appendAssistantMsg("assistant", resposta);
+    assistant.history.push({ role: "assistant", conteudo: resposta });
+  } catch (err) {
+    // Não entra no histórico enviado ao modelo; só informa o usuário.
+    appendAssistantMsg("assistant", err.message || "Não consegui falar com o assistente agora. Tente novamente.");
+  } finally {
+    setAssistantLoading(false);
+  }
+}
+
+function setAssistantLoading(loading) {
+  assistant.loading = loading;
+  $("#assistant-input").disabled = loading;
+  $("#assistant-send").disabled = loading;
+  const list = $("#assistant-messages");
+  const existente = $("#assistant-typing", list);
+  if (loading && !existente) {
+    const el = document.createElement("div");
+    el.className = "amsg amsg--bot amsg--typing";
+    el.id = "assistant-typing";
+    el.innerHTML = "<span></span><span></span><span></span>";
+    list.appendChild(el);
+    list.scrollTop = list.scrollHeight;
+  } else if (!loading && existente) {
+    existente.remove();
+  }
+  if (!loading) setTimeout(() => $("#assistant-input").focus(), 30);
+}
+
+function appendAssistantMsg(role, texto) {
+  const list = $("#assistant-messages");
+  const el = document.createElement("div");
+  el.className = `amsg amsg--${role === "user" ? "user" : "bot"}`;
+  // Escapa o conteúdo, converte **negrito** e quebras de linha.
+  const html = esc(texto)
+    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+    .replace(/\n/g, "<br>");
+  el.innerHTML = html;
+  const typing = $("#assistant-typing", list);
+  if (typing) list.insertBefore(el, typing);
+  else list.appendChild(el);
+  list.scrollTop = list.scrollHeight;
+}
+
+// ============================================================
 //  BOOT
 // ============================================================
 function init() {
@@ -800,6 +907,7 @@ function init() {
   initModals();
   initFichaForm();
   initVideoForm();
+  initAssistant();
 
   // Logout automático quando o token é rejeitado pela API
   window.addEventListener("cranium:unauthorized", () => {

@@ -174,6 +174,29 @@
         </div>
       </section>
     </main>
+
+    <!-- ===================== ASSISTENTE VIRTUAL ===================== -->
+    <button class="assistant-fab" id="assistant-fab" type="button" aria-label="Abrir assistente" title="Assistente Cranium">
+      <span class="assistant-fab__icon">💬</span>
+    </button>
+
+    <section class="assistant is-hidden" id="assistant-panel" aria-label="Assistente virtual da Cranium">
+      <header class="assistant__head">
+        <div class="assistant__brand">
+          <span class="assistant__avatar">C</span>
+          <div>
+            <div class="assistant__title">Assistente Cranium</div>
+            <div class="assistant__status">Treino, dieta e uso do app</div>
+          </div>
+        </div>
+        <button class="assistant__close" id="assistant-close" type="button" aria-label="Fechar">&times;</button>
+      </header>
+      <div class="assistant__messages" id="assistant-messages"></div>
+      <form class="assistant__form" id="assistant-form">
+        <input type="text" id="assistant-input" placeholder="Pergunte algo sobre treino, dieta..." autocomplete="off" maxlength="500" />
+        <button type="submit" class="assistant__send" id="assistant-send" aria-label="Enviar">➤</button>
+      </form>
+    </section>
   </div>
 
   <!-- ===================== MODAL: DETALHE DA FICHA ===================== -->

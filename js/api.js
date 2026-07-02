@@ -116,3 +116,9 @@ export const videosApi = {
   atualizar: (id, video) => request(`/api/videos/${id}`, { method: "PUT", body: video }),
   deletar: (id) => request(`/api/videos/${id}`, { method: "DELETE" }),
 };
+
+// ---------------- Assistente virtual ----------------
+export const assistenteApi = {
+  // mensagens: [{ role: "user"|"assistant", conteudo: "..." }] → { resposta }
+  perguntar: (mensagens) => request("/api/assistente", { method: "POST", body: { mensagens } }),
+};
