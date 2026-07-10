@@ -245,7 +245,7 @@ function cardHTML(ficha) {
   const saved = isFav(state.user.email, ficha.id);
   const qtd = (ficha.exercicios || []).length;
   return `
-    <article class="card" data-id="${ficha.id}">
+    <article class="card" data-id="${esc(ficha.id)}">
       <div class="card__stripe"></div>
       <div class="card__body">
         <div class="card__top">
@@ -255,7 +255,7 @@ function cardHTML(ficha) {
         <p class="card__desc">${esc(ficha.descricao || "Sem descrição.")}</p>
         <div class="card__meta">
           <span>💪 <strong>${qtd}</strong> exercício${qtd === 1 ? "" : "s"}</span>
-          ${ficha.data ? `<span>📅 ${formatDate(ficha.data)}</span>` : ""}
+          ${ficha.data ? `<span>📅 ${esc(formatDate(ficha.data))}</span>` : ""}
         </div>
       </div>
       <div class="card__actions">
@@ -328,7 +328,7 @@ async function openFichaDetail(id) {
     <h2 class="detail__title">${esc(ficha.titulo)}</h2>
     <div class="detail__meta">
       <span>💪 ${exercicios.length} exercício${exercicios.length === 1 ? "" : "s"}</span>
-      ${ficha.data ? `<span>📅 Criada em ${formatDate(ficha.data)}</span>` : ""}
+      ${ficha.data ? `<span>📅 Criada em ${esc(formatDate(ficha.data))}</span>` : ""}
     </div>
     ${ficha.descricao ? `<p class="detail__desc">${esc(ficha.descricao)}</p>` : ""}
     <h3 class="detail__section-title">Exercícios</h3>
@@ -391,20 +391,25 @@ function videoEmbedHTML(url) {
 
   const yt = safe.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([\w-]{11})/);
   if (yt) {
-    return `<div class="video-embed"><iframe src="https://www.youtube.com/embed/${yt[1]}" title="Vídeo do exercício" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>`;
+    return `<div class="video-embed"><iframe src="https://www.youtube-nocookie.com/embed/${yt[1]}" title="Vídeo do exercício" referrerpolicy="no-referrer" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>`;
   }
 
   const vm = safe.match(/vimeo\.com\/(?:video\/)?(\d+)/);
   if (vm) {
-    return `<div class="video-embed"><iframe src="https://player.vimeo.com/video/${vm[1]}" title="Vídeo do exercício" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe></div>`;
+    return `<div class="video-embed"><iframe src="https://player.vimeo.com/video/${vm[1]}" title="Vídeo do exercício" referrerpolicy="no-referrer" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe></div>`;
   }
 
-  if (/\.(mp4|webm|ogg)(\?.*)?$/i.test(safe)) {
-    return `<div class="video-embed"><video src="${esc(safe)}" controls></video></div>`;
+  // Só tratamos como URL válida se for http(s) explícito — bloqueia esquemas
+  // como javascript:, data: ou vbscript: mesmo que terminem em .mp4.
+  const isHttp = /^https?:\/\//i.test(safe);
+
+  // Vídeo embutido só via https (alinhado à CSP media-src); http cai no link abaixo.
+  if (/^https:\/\//i.test(safe) && /\.(mp4|webm|ogg)(\?.*)?$/i.test(safe)) {
+    return `<div class="video-embed"><video src="${esc(safe)}" controls preload="metadata"></video></div>`;
   }
 
-  if (/^https?:\/\//i.test(safe)) {
-    return `<p class="video-fallback">Não foi possível incorporar este vídeo. <a href="${esc(safe)}" target="_blank" rel="noopener">Abrir em nova aba ↗</a></p>`;
+  if (isHttp) {
+    return `<p class="video-fallback">Não foi possível incorporar este vídeo. <a href="${esc(safe)}" target="_blank" rel="noopener noreferrer">Abrir em nova aba ↗</a></p>`;
   }
 
   return `<p class="video-fallback">URL de vídeo inválida.</p>`;
@@ -419,7 +424,7 @@ function renderAdmin() {
   wrap.innerHTML = state.fichas
     .map(
       (f) => `
-    <div class="admin-row" data-id="${f.id}">
+    <div class="admin-row" data-id="${esc(f.id)}">
       <div class="admin-row__info">
         <div class="admin-row__title">${esc(f.titulo)}</div>
         <div class="admin-row__sub">${esc(f.categoria || "Geral")} · ${(f.exercicios || []).length} exercícios</div>
@@ -506,15 +511,15 @@ function addExerciseRow(ex = {}) {
     .concat(
       state.videos.map(
         (v) =>
-          `<option value="${v.id}" ${String(v.id) === String(selectedVideoId) ? "selected" : ""}>${esc(v.nome)}</option>`
+          `<option value="${esc(v.id)}" ${String(v.id) === String(selectedVideoId) ? "selected" : ""}>${esc(v.nome)}</option>`
       )
     )
     .join("");
   row.innerHTML = `
     <span class="ex-edit__handle">≡</span>
     <input type="text" data-f="nome" placeholder="Nome do exercício" value="${esc(ex.nome || "")}" required />
-    <input type="number" data-f="series" min="1" placeholder="3" value="${ex.series ?? ""}" />
-    <input type="number" data-f="repeticoes" min="1" placeholder="12" value="${ex.repeticoes ?? ""}" />
+    <input type="number" data-f="series" min="1" placeholder="3" value="${esc(ex.series ?? "")}" />
+    <input type="number" data-f="repeticoes" min="1" placeholder="12" value="${esc(ex.repeticoes ?? "")}" />
     <select data-f="videoId" title="Vídeo de demonstração">${options}</select>
     <button type="button" class="ex-edit__remove" title="Remover">&times;</button>`;
   row.querySelector(".ex-edit__remove").addEventListener("click", () => row.remove());
@@ -594,7 +599,7 @@ function renderVideosAdmin() {
   wrap.innerHTML = state.videos
     .map(
       (v) => `
-    <div class="admin-row" data-id="${v.id}">
+    <div class="admin-row" data-id="${esc(v.id)}">
       <div class="admin-row__info">
         <div class="admin-row__title">${esc(v.nome)}</div>
         <div class="admin-row__sub">${esc(v.categoria || "Sem categoria")}</div>

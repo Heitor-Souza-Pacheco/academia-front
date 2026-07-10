@@ -3,6 +3,30 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- ============================================================
+       SEGURANÇA — Content Security Policy
+       script-src 'self' bloqueia <script> inline, handlers on*= e URLs
+       javascript: injetados: mesmo que um dado malicioso escape do esc(),
+       ele não executa. connect-src limita para onde o front pode falar
+       (impede exfiltração de token). Ajuste 'connect-src' se o backend
+       mudar de host/porta (ver API_BASE em js/config.js).
+       ============================================================ -->
+  <meta http-equiv="Content-Security-Policy" content="
+    default-src 'self';
+    base-uri 'self';
+    object-src 'none';
+    script-src 'self';
+    style-src 'self' https://fonts.googleapis.com 'unsafe-inline';
+    font-src https://fonts.gstatic.com;
+    img-src 'self' data:;
+    media-src 'self' https:;
+    connect-src 'self' http://localhost:8080;
+    frame-src https://www.youtube-nocookie.com https://player.vimeo.com;
+    form-action 'self';
+  " />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
+
   <title>Cranium — Academia</title>
   <meta name="description" content="Cranium — sua academia. Fichas de treino, exercícios e progresso." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
